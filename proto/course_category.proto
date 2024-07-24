@@ -1,0 +1,63 @@
+syntax = "proto3";
+// É comum colocar o package como pb (protocol buffer)
+package pb;
+// Aqui ele vai criar uma pasta internal 
+option go_package = "internal/pb";
+// Mensagem em branco para poder listar categorias e outros registros que não precisam enviar uma mensagem
+// Necessariamente, é comum criar essa mensagem em branco
+message blank {}
+// Criando a parte de categorias
+message Category {
+    // Os números na frente de cada campo é a ordem de cada campo, no caso 1 vai ser o 1°, 2 o 2° e assim por diante
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message FindCategoryByID {
+    string id = 1;
+}
+
+// Aqui criamos a nossa request, o que vamos enviar
+message CreateCategoryRequest {
+    string name = 1;
+    string description = 2;
+}
+
+// Aqui definimos a response da nossa category
+message CategoryResponse {
+    Category category = 1;
+}
+
+message CategoryList {
+    // Indicando esse repeated, signifca que vai receber diversos registros
+    // Como não temos parametros vamos criar uma mensagem em branco a "blank"
+    repeated Category categories = 1;
+}
+
+// Aqui nos definimos o serviço da nossa requisição
+service CategoryService {
+    // rpc CreateCategory (Request) returns (Response) {}
+    // rpc - tipo do serviço que é rpc
+    // CreateCategory - definimos o nome do nosso servio
+    //  (Request) - definimos qual é a nossa request, quais campos a nossa request vai ter, seria  nossa mensagem
+    //  returns (Response) - definimos o formato da nossa resposta
+    // rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse) {}
+    rpc CreateCategory(CreateCategoryRequest) returns (Category) {}
+    // O nome do método tem que ser igual o nome da message declarado no service para poder fazer o bind
+    rpc ListCategories(blank) returns (CategoryList) {}
+    rpc ListCategoryByID(FindCategoryByID) returns (Category) {}
+    // ########## STREAM
+    // Criando stream rpc, nesse método nós enviamos diversos dados e só depois que todos forem processados nós temos o retorno
+    // Aqui nó usamos a message de createcategory, nesse caso nós vamos enviar diversos registros e depois que todos forem registrados, quando encerrarmos a conexão que vamos ter o retorno em uma lista de categorias
+    rpc CreateCategoryStream(stream CreateCategoryRequest) returns (CategoryList) {}
+
+    // Aqui nós temos o stream bidirecional, a diferença do anterior é que a cada requisição enviada nós já recebemos o retorno, não é igual o anterior que vai acumulando, cada envio eu tenho uma resposta
+    // OBS: não esquecer de adicionar o stream no retorno também
+    rpc CreateCategoryStreamBidirectional(stream CreateCategoryRequest) returns (stream Category) {}
+}
+
+// depois que definimos as nossas reqquest e response rodamos o comando apra gerar nossos proto
+// protoc --go_out=. --go-grpc_out=. proto/course_category.proto
+// proto/course_category.proto - indicamos a partir de qual arquivo vai criar o nosso proto
+// Aqui irá criar os arquivos necessarios para utilizarmos o GRPC, na pasta internal
