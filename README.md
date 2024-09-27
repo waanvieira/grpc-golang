@@ -20,6 +20,10 @@ show package
 # Mostra nossos service 
 show service
 
+# Selecionar o package
+
+package nome_package
+
 # Para executarmos uma chamada
 
 service NomeDoService
